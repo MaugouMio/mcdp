@@ -235,11 +235,7 @@ def read_script(script, this_dir):
 						
 	return description, namespaces
 
-def build_datapack():
-	filename = sys.argv[2]
-	if filename[-4:] != ".dpl":
-		filename += ".dpl"
-	
+def build_datapack(filename):	
 	this_dir = os.path.dirname(os.path.abspath(filename))
 	with open(filename, "r", encoding='UTF-8') as script:
 		description, namespaces = read_script(script.read().splitlines(), this_dir)
@@ -249,12 +245,25 @@ def install_module():
 
 	
 	
-if len(sys.argv != 3):
-	print("Use 'mcdp make <script file path>' to build a datapack")
-	print("Use 'mcdp install <module name>' to install a module from the internet")
-	sys.exit(0)
-else:
-	if sys.argv[1][0].lower() == "m":
-		build_datapack()
-	elif sys.argv[1][0].lower() == "i":
-		install_module()
+
+if __name__ == "__main__":
+	if len(sys.argv != 3):
+		print("Use 'mcdp make <script file path>' to build a datapack")
+		print("Use 'mcdp install <module name>' to install a module from the internet")
+		print("Use 'mcdp uninstall <module name>' to uninstall a module")
+		sys.exit(0)
+	else:
+		script_name = ' '.join(sys.argv[2:])
+		if sys.argv[1][0].lower() == "m":
+			if script_name[-4:] != ".dpl":
+				script_name += ".dpl"
+				
+			if not os.path.isfile(script_name):
+				raise FileNotFoundError("No such file or directory: '%s'" %script_name)
+			build_datapack(filename)
+			
+		elif sys.argv[1][0].lower() == "i":
+			install_module(script_name)
+			
+		elif sys.argv[1][0].lower() == "u":
+			uninstall_module(script_name)
