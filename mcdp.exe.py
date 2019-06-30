@@ -229,7 +229,7 @@ def read_block(code, this, namespaces, argv = [], arg_name = []): # 'this' is a 
 		# not an empty row or comment
 		if len(splitted_line) > 0 and this_line[0] != '#':
 			if block_stack > 0:
-				end_char = this_line.rstrip()[-1]
+				end_char = this_line.lstrip().rstrip()
 				if end_char == '{':
 					block_stack += 1
 				elif end_char == '}':
@@ -239,7 +239,7 @@ def read_block(code, this, namespaces, argv = [], arg_name = []): # 'this' is a 
 				if block_stack == 0:
 					# not pure '}' mark
 					if not this_line.lstrip().rstrip() == '}':
-						block_content.append(script[line_index].rstrip()[:-1])
+						raise SyntaxError(this_line)
 					
 					if len(this_block.argv) == 0:
 						this.items[declare_name] = read_block(block_content, this_block, namespaces)
@@ -259,15 +259,11 @@ def read_block(code, this, namespaces, argv = [], arg_name = []): # 'this' is a 
 					# preview and ignore the next line
 					line_index += 1
 					if script[line_index].lstrip(" \t").rstrip(" \t") != '{':
-						raise SyntaxError(script[line_index])
+						raise SyntaxError(script[line_index].lstrip(" \t"))
+				elif end_char == ';':
+					this.items[declare_name] = var
 				else:
-					if end_char == '{':
-						this_block = var
-						block_stack += 1
-					elif end_char == ';':
-						this.items[declare_name] = var
-					else:
-						raise SyntaxError(this_line)
+					raise SyntaxError(this_line)
 							
 			else:
 				raise SyntaxError(this_line)
@@ -280,7 +276,7 @@ def parse_definition(line, namespaces):
 	end_char = None
 	
 	line = line.rstrip()
-	if line[-1] == ';' or line[-1] == '{':
+	if line[-1] == ';':
 		sep_line = split_by_chars(line[:-1])
 		end_char = line[-1]
 	elif line[-1] == ')':
@@ -393,6 +389,7 @@ variable_types = ["namespace", "folder", "func"]
 def read_script(script, this_dir):
 	search_path = [this_dir] + module_path
 	
+	tags = {"tick": [], "load": []}
 	namespaces = {}
 	description = ""
 
@@ -427,7 +424,7 @@ def read_script(script, this_dir):
 			if len(splitted_line) > 0 and this_line[0] != '#':
 				# read block contents
 				if block_stack > 0:
-					end_char = this_line.rstrip()[-1]
+					end_char = this_line.lstrip().rstrip()
 					if end_char == '{':
 						block_stack += 1
 					elif end_char == '}':
@@ -437,7 +434,7 @@ def read_script(script, this_dir):
 					if block_stack == 0:
 						# not pure '}' mark
 						if not this_line.lstrip().rstrip() == '}':
-							block_content.append(script[line_index].rstrip()[:-1])
+							raise SyntaxError(this_line)
 						
 						if len(this_block.argv) == 0:
 							namespaces[declare_name] = read_block(block_content, this_block, namespaces)
@@ -469,17 +466,24 @@ def read_script(script, this_dir):
 						if virtual_namespace and i == (len(splitted_line) - 2):
 							break
 						
-						junk_description, imported = read_script(find_lib(splitted_line[i], search_path))
+						junk_description, imported, imported_tags = read_script(find_lib(splitted_line[i], search_path))
 						if virtual_namespace:
 							# set namespaces as virtual
 							for key in imported.keys():
 								imported[key].virtual = True
+							# ignore tags
+							imported_tags = {}
 						
+						# check duplicated namespaces
 						for key in imported.keys():
 							if key in namespaces.keys() and namespaces[key].virtual == False:
 								raise NameError("namespace " + key + " already defined")
-								
+						
 						merge_two_dicts(namespaces, imported)
+						# append tags
+						for key in imported_tags.keys():
+							for tag in imported_tags[key]:
+								tags[key].append(tag)
 					
 					
 					
@@ -490,7 +494,11 @@ def read_script(script, this_dir):
 						
 					virtual_namespace = splitted_line[-2] == "as" and splitted_line[-1] == "virtual"
 					# delete unneeded namespaces
-					junk_description, imported = read_script(find_lib(splitted_line[1], search_path))
+					junk_description, imported, imported_tags = read_script(find_lib(splitted_line[1], search_path))
+					# ignore all tags when import as virtual
+					if virtual_namespace:
+						imported_tags = {}
+					
 					imported_namespaces = list(imported.keys())
 					for key in imported_namespaces:
 						if virtual_namespace:
@@ -502,8 +510,20 @@ def read_script(script, this_dir):
 						else:
 							if key not in splitted_line[3:]:
 								imported.pop(key)
+								# ignore tags of not imported namespaces
+								for tag_key in imported_tags.keys():
+									tag_index = 0
+									while tag_index < len(imported_tags[tag_key]):
+										if imported_tags[tag_key][tag_index].split(':')[0] == key:
+											del imported_tags[tag_key][tag_index]
+										else:
+											tag_index += 1
 												
 					merge_two_dicts(namespaces, imported)
+					# append tags
+					for key in imported_tags.keys():
+						for tag in imported_tags[key]:
+							tags[key].append(tag)
 					
 					
 					
@@ -518,15 +538,11 @@ def read_script(script, this_dir):
 						# preview and ignore the next line
 						line_index += 1
 						if script[line_index].lstrip(" \t").rstrip(" \t") != '{':
-							raise SyntaxError(script[line_index])
+							raise SyntaxError(script[line_index].lstrip(" \t"))
+					elif end_char == ';':
+						add_namespace(declare_name, var, namespaces)
 					else:
-						if end_char == '{':
-							this_block = var
-							block_stack += 1
-						elif end_char == ';':
-							add_namespace(declare_name, var, namespaces)
-						else:
-							raise SyntaxError(this_line)
+						raise SyntaxError(this_line)
 				
 				
 				
@@ -538,8 +554,27 @@ def read_script(script, this_dir):
 				
 				# add minecraft tags
 				elif splitlines[0] == "tag":
-					pass
-				
+					if splitlines[1] == "tick" or splitlines[1] == "load":
+						line_index += 1
+						if script[line_index].lstrip(" \t").rstrip(" \t") != '{':
+							raise SyntaxError(script[line_index].lstrip(" \t"))
+						
+						line_index += 1
+						while line_index < len(script):
+							tag_content = script[line_index].lstrip(" \t").rstrip(" \t")
+							# not an empty line or comment
+							if not (len(tag_content) == 0 or tag_content[0] == '#'):
+								if tag_content == '}':
+									break
+								else:
+									tags[splitlines[1]].append(tag_content)
+									if line_index == (len(script) - 1):
+										raise SyntaxError("EOF while scanning tag literal")
+									
+							line_index += 1
+					else:
+						raise SyntaxError(this_line)
+					
 				
 				
 				# unknown command
@@ -547,8 +582,8 @@ def read_script(script, this_dir):
 					raise SyntaxError(this_line)
 					
 		line_index += 1
-						
-	return description, namespaces
+		
+	return description, namespaces, tags
 
 def build_datapack(filename):	
 	this_dir = os.path.dirname(os.path.abspath(filename))
