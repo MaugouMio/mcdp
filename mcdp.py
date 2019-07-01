@@ -586,6 +586,12 @@ def read_script(script, this_dir):
 								if tag_content == '}':
 									break
 								else:
+									# fix '"' mark
+									if tag_content[0] != '"':
+										tag_content = '"' + tag_content
+									if tag_content[-1] != '"':
+										tag_content += '"'
+										
 									tags[splitlines[1]].append(tag_content)
 									if line_index == (len(script) - 1):
 										raise SyntaxError("EOF while scanning tag literal")
@@ -637,6 +643,19 @@ def build_datapack(proj_path):
 	for n in namespaces.keys():
 		namespaces[n].build(build_dir)
 	
+	# build tags
+	if not os.path.isdir(build_dir + "minecraft"):
+		os.mkdir(build_dir + "minecraft")
+	if not os.path.isdir(build_dir + "minecraft/tags"):
+		os.mkdir(build_dir + "minecraft/tags")
+	if not os.path.isdir(build_dir + "minecraft/tags/functions"):
+		os.mkdir(build_dir + "minecraft/tags/functions")
+	build_dir += "minecraft/tags/functions/"
+	
+	for key in tags.keys():
+		with open(build_dir + key + ".json", "w", encoding="utf-8") as f:
+			f.write('{\n\t"values":[\n\t\t%s\n\t]\n}' %",\n\t\t".join(tags[key]))
+	
 	return "Build Success!"
 	
 def install_module(module_name):
@@ -673,7 +692,7 @@ def uninstall_module(module_name):
 if __name__ == "__main__":
 	if len(sys.argv < 3):
 		print("Unknown command.")
-		print("Use 'mcdp create <datapack name> <destination folder>' to create a new datapack project")
+		print("Use 'mcdp create <datapack name>' to create a new datapack project")
 		print("Use 'mcdp make <project directory>' to build a datapack")
 		print("Use 'mcdp install <module name>' to install a module from the internet")
 		print("Use 'mcdp uninstall <module name>' to uninstall a module")
@@ -696,7 +715,7 @@ if __name__ == "__main__":
 			print(uninstall_module(script_name))
 		else:
 			print("Unknown command.")
-			print("Use 'mcdp create <datapack name> <destination folder>' to create a new datapack project")
+			print("Use 'mcdp create <datapack name>' to create a new datapack project")
 			print("Use 'mcdp make <project directory>' to build a datapack")
 			print("Use 'mcdp install <module name>' to install a module from the internet")
 			print("Use 'mcdp uninstall <module name>' to uninstall a module")
