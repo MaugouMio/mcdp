@@ -2,8 +2,7 @@
 import sys, os, shutil
 from io import StringIO
 
-install_path = os.path.expandvars("%LOCALAPPDATA%/mcdp")
-module_path = [install_path + "/lib/"]
+module_path = ["./lib/"]
 
 class Folder:
 	def __init__(self):
@@ -613,7 +612,7 @@ def build_datapack(filename):
 		description, namespaces, tags = read_script(script.read().splitlines(), this_dir)
 	
 	if os.path.isdir(filename):
-		user_response = str(input("Directory " + filename[:-4] + " already exists.\nDo you want to replace it (y/n)? ")).lower()
+		user_response = str(input("Datapack '" + filename[:-4] + "' already exists.\nDo you want to replace it (y/n)? ")).lower()
 		while user_response not in ['y', 'n']:
 			user_response = str(input("'%s' was not one of the expected responses: y, n\nDo you want to replace it (y/n)? " %user_response)).lower()
 		
@@ -667,9 +666,9 @@ def uninstall_module(module_name):
 if __name__ == "__main__":
 	if len(sys.argv != 3):
 		print("Unknown command!")
-		print("Use 'mcdp make <script file path>' to build a datapack")
-		print("Use 'mcdp install <module name>' to install a module from the internet")
-		print("Use 'mcdp uninstall <module name>' to uninstall a module")
+		print("Use 'mcdp.py make <script file path>' to build a datapack")
+		print("Use 'mcdp.py install <module name>' to install a module from the internet")
+		print("Use 'mcdp.py uninstall <module name>' to uninstall a module")
 		sys.exit(0)
 	else:
 		# file name or path may have spaces
@@ -689,7 +688,7 @@ if __name__ == "__main__":
 			print(uninstall_module(script_name))
 		else:
 			print("Unknown command!")
-			print("Use 'mcdp make <script file path>' to build a datapack")
-			print("Use 'mcdp install <module name>' to install a module from the internet")
-			print("Use 'mcdp uninstall <module name>' to uninstall a module")
+			print("Use 'mcdp.py make <script file path>' to build a datapack")
+			print("Use 'mcdp.py install <module name>' to install a module from the internet")
+			print("Use 'mcdp.py uninstall <module name>' to uninstall a module")
 			sys.exit(0)
