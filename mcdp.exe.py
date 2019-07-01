@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-import sys, os
+import sys, os, shutil
 from io import StringIO
 
 install_path = os.path.expandvars("%LOCALAPPDATA%/mcdp")
@@ -175,7 +175,7 @@ def find_lib(script_name, search_path):
 		elif os.path.isfile(path + script_name + "/__main__.dpl"):
 			with open(path + script_name + "/__main__.dpl", "r", encoding='UTF-8') as f:
 				script = f.read().splitlines()
-			return script, path + script_name
+			return script, path + script_name + '/'
 			
 	raise ImportError("No module named '" + script_name + "'")
 
@@ -613,10 +613,17 @@ def build_datapack(filename):
 		description, namespaces, tags = read_script(script.read().splitlines(), this_dir)
 	
 	if os.path.isdir(filename):
-		raise FileExistsError("Build failed! Directory " + filename + " already exists.")
-	else:
-		os.mkdir(filename)
-		os.mkdir(filename + "/data")
+		user_response = str(input("Directory " + filename[:-4] + " already exists.\nDo you want to replace it (y/n)? ")).lower()
+		while user_response not in ['y', 'n']:
+			user_response = str(input("'%s' was not one of the expected responses: y, n\nDo you want to replace it (y/n)? " %user_response)).lower()
+		
+		if user_response == 'y':
+			shutil.rmtree(filename[:-4])
+		else:
+			return "Build Canceled."
+
+	os.mkdir(filename)
+	os.mkdir(filename + "/data")
 		
 	# generate pack.mcmeta
 	with open(filename + "/pack.mcmeta", "w", encoding="utf-8") as pack:
@@ -627,24 +634,45 @@ def build_datapack(filename):
 	for n in namespaces.keys():
 		namespaces[n].build(build_dir)
 	
-	print("Build Success!")
+	return "Build Success!"
 	
 def install_module(module_name):
-	print("Function not implemented yet.")
+	return "Function not implemented yet."
 	
 def uninstall_module(module_name):
-	pass
-
+	remove_path = None
+	for path in module_path:
+		if os.path.isfile(path + module_name + "dpl"):
+			remove_path = path + module_name + "dpl"
+		elif os.path.isfile(path + module_name + "/__main__.dpl"):
+			remove_path = path + module_name
 	
+	if remove_path == None:
+		return module_name + " is not installed."
+
+	user_response = str(input("Will remove:\n  " + remove_path + "\nContinue (y/n)? ")).lower()
+	while user_response not in ['y', 'n']:
+		user_response = str(input("'%s' was not one of the expected responses: y, n\nContinue (y/n)? " %user_response)).lower()
+	
+	if user_response == 'y':
+		try:
+			os.remove(remove_path)
+		except OSError:
+			shutil.rmtree(path + module_name)
+	
+	return "Uninstall Success!"
+		
 	
 
 if __name__ == "__main__":
 	if len(sys.argv != 3):
+		print("Unknown command!")
 		print("Use 'mcdp make <script file path>' to build a datapack")
 		print("Use 'mcdp install <module name>' to install a module from the internet")
 		print("Use 'mcdp uninstall <module name>' to uninstall a module")
 		sys.exit(0)
 	else:
+		# file name or path may have spaces
 		script_name = ' '.join(sys.argv[2:])
 		if sys.argv[1][0].lower() == "m":
 			if script_name[-4:] != ".dpl":
@@ -652,10 +680,16 @@ if __name__ == "__main__":
 				
 			if not os.path.isfile(script_name):
 				raise FileNotFoundError("No such file or directory: '%s'" %script_name)
-			build_datapack(filename)
+			print(build_datapack(filename))
 			
 		elif sys.argv[1][0].lower() == "i":
-			install_module(script_name)
+			print(install_module(script_name))
 			
 		elif sys.argv[1][0].lower() == "u":
-			uninstall_module(script_name)
+			print(uninstall_module(script_name))
+		else:
+			print("Unknown command!")
+			print("Use 'mcdp make <script file path>' to build a datapack")
+			print("Use 'mcdp install <module name>' to install a module from the internet")
+			print("Use 'mcdp uninstall <module name>' to uninstall a module")
+			sys.exit(0)
