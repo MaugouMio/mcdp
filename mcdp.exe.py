@@ -7,8 +7,10 @@ module_path = [install_path + "/lib/"]
 
 class Folder:
 	def __init__(self):
+		self.name = ""
 		self.items = dict()
 		self.virtual = False
+		self.is_namespace = False
 		
 		self.argv = []
 		self.unparsed = []
@@ -20,14 +22,24 @@ class Folder:
 		new_folder.virtual = self.virtual
 		new_folder.argv = list(self.argv)
 		new_folder.unparsed = list(self.unparsed)
+		# not copying name and namespace status
 		
 		return new_folder
 		
-	def build(self):
-		pass
+	def build(self, dir):
+		if not self.virtual:
+			sub_dir = dir + self.name
+			os.mkdir(sub_dir)
+			if self.is_namespace:
+				sub_dir += "/functions"
+				os.mkdir(sub_dir)
+			
+			for key in self.items.keys():
+				self.items[key].build(sub_dir + '/')
 		
 class Function:
 	def __init__(self):
+		self.name = ""
 		self.commands = ""
 		self.virtual = False
 		
@@ -36,17 +48,19 @@ class Function:
 
 	def copy(self):
 		new_function = Function()
-		new_function.commands = list(self.commands)
+		new_function.commands = self.commands
 		new_function.virtual = self.virtual
 		new_folder.argv = list(self.argv)
 		new_folder.unparsed = list(self.unparsed)
+		# not copying name
 		
 		return new_function
 		
-	def build(self):
-		pass
+	def build(self, dir):
+		if not self.virtual:
+			with open(dir + self.name + ".mcfunction", "w", encoding="utf-8") as f:
+				f.write(self.commands)
 		
-
 		
 
 sep_char = [' ', ',']
@@ -375,6 +389,7 @@ def parse_definition(line, namespaces):
 	if len(argv) > 0 and not is_virtual:
 		raise ValueError("Arguments can not be assigned to non virtual objects\n  " + line)
 	
+	var.name = declare_name
 	var.virtual = is_virtual
 	var.argv = argv
 	return declare_name, var, end_char
@@ -527,9 +542,10 @@ def read_script(script, this_dir):
 					
 					
 					
-				# define a namespace (blocks are separated by {} instead of LF)
+				# define a namespace (blocks are separated by {})
 				elif splitted_line[0] == "namespace":
 					declare_name, var, end_char = parse_definition(this_line, namespaces)
+					var.is_namespace = True
 					
 					if end_char == None:
 						this_block = var
@@ -585,13 +601,36 @@ def read_script(script, this_dir):
 		
 	return description, namespaces, tags
 
+###########################################
+#            normal functions             #
+# ======================================= #
+#             user functions              #
+###########################################
+
 def build_datapack(filename):	
 	this_dir = os.path.dirname(os.path.abspath(filename))
 	with open(filename, "r", encoding='UTF-8') as script:
-		description, namespaces = read_script(script.read().splitlines(), this_dir)
+		description, namespaces, tags = read_script(script.read().splitlines(), this_dir)
+	
+	if os.path.isdir(filename):
+		raise FileExistsError("Build failed! Directory " + filename + " already exists.")
+	else:
+		os.mkdir(filename)
+		os.mkdir(filename + "/data")
+		
+	# generate pack.mcmeta
+	with open(filename + "/pack.mcmeta", "w", encoding="utf-8") as pack:
+		pack.write('{\n\t"pack":\n\t{\n\t\t"pack_format": 1,\n\t\t"description": "%s"\n\t}\n}' %description)
+		
+	build_dir = filename + "/data/"
+	# recursive build
+	for n in namespaces.keys():
+		namespaces[n].build(build_dir)
+	
+	print("Build Success!")
 	
 def install_module(module_name):
-	pass
+	print("Function not implemented yet.")
 	
 def uninstall_module(module_name):
 	pass
