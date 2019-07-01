@@ -617,6 +617,13 @@ def read_script(script, this_dir):
 ###########################################
 
 def build_datapack(proj_path):
+	# fix path format
+	if proj_path[-1] == '/' or proj_path[-1] == '\\':
+		proj_path = proj_path[:-1]
+		
+	if not os.path.isfile(proj_path + "/__main__.dpl"):
+		return "No such file or directory:\n  %s" %proj_path
+	
 	datapack_name = os.path.basename(proj_path)
 	with open(proj_path + "/__main__.dpl", "r", encoding='UTF-8') as script:
 		description, namespaces, tags = read_script(script.read().splitlines(), proj_path)
@@ -631,14 +638,14 @@ def build_datapack(proj_path):
 		else:
 			return "Build cancelled."
 
-	os.mkdir("build/" + datapack_name)
-	os.mkdir("build/" + datapack_name + "/data")
+	os.mkdir(proj_path + "/build/" + datapack_name)
+	os.mkdir(proj_path + "/build/" + datapack_name + "/data")
 		
 	# generate pack.mcmeta
-	with open("build/" + datapack_name + "/pack.mcmeta", "w", encoding="utf-8") as pack:
+	with open(proj_path + "/build/" + datapack_name + "/pack.mcmeta", "w", encoding="utf-8") as pack:
 		pack.write('{\n\t"pack":\n\t{\n\t\t"pack_format": 1,\n\t\t"description": "%s"\n\t}\n}' %description)
 		
-	build_dir = "build/" + datapack_name + "/data/"
+	build_dir = proj_path + "/build/" + datapack_name + "/data/"
 	# recursive build
 	for n in namespaces.keys():
 		namespaces[n].build(build_dir)
@@ -685,7 +692,7 @@ def uninstall_module(module_name):
 			except OSError:
 				shutil.rmtree(path)
 	
-	return "Uninstallation completed!"
+	return "%s uninstalled!" %module_name
 
 def create_project(proj_name):
 	if os.path.isdir(proj_name):	
@@ -714,8 +721,6 @@ if __name__ == "__main__":
 			print(create_project(script_name))
 			
 		elif sys.argv[1][0].lower() == "m":
-			if not os.path.isfile(script_name + "/__main__.dpl"):
-				raise FileNotFoundError("No such file or directory: '%s'" %script_name)
 			print(build_datapack(script_name))
 			
 		elif sys.argv[1][0].lower() == "i":
