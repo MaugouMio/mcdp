@@ -629,7 +629,7 @@ def build_datapack(proj_path):
 		if user_response == 'y':
 			shutil.rmtree("build/" + datapack_name)
 		else:
-			return "Build Canceled."
+			return "Build cancelled."
 
 	os.mkdir("build/" + datapack_name)
 	os.mkdir("build/" + datapack_name + "/data")
@@ -656,7 +656,7 @@ def build_datapack(proj_path):
 		with open(build_dir + key + ".json", "w", encoding="utf-8") as f:
 			f.write('{\n\t"values":[\n\t\t%s\n\t]\n}' %",\n\t\t".join(tags[key]))
 	
-	return "Build Success!"
+	return "Build completed!"
 	
 def install_module(module_name):
 	return "Function not implemented yet."
@@ -685,24 +685,34 @@ def uninstall_module(module_name):
 			except OSError:
 				shutil.rmtree(path)
 	
-	return "Uninstall Success!"
-		
+	return "Uninstallation completed!"
+
+def create_project(proj_name):
+	if os.path.isdir(proj_name):	
+		return "Destination folder '%s' already exists, please try again with another name." %proj_name
+	
+	os.mkdir(proj_name)
+	shutil.copyfile(install_path + "/samp/template.dpl", proj_name + "/__main__.dpl")
+	
+	return "Datapack project '%s' created!" %proj_name
+	
+def help():
+	print("Use 'mcdp create <datapack name>' to create a new datapack project")
+	print("Use 'mcdp make <project directory>' to build a datapack")
+	print("Use 'mcdp install <module name>' to install a module from the internet")
+	print("Use 'mcdp uninstall <module name>' to uninstall a module")
+	
 	
 
 if __name__ == "__main__":
 	if len(sys.argv < 3):
-		print("Unknown command.")
-		print("Use 'mcdp create <datapack name>' to create a new datapack project")
-		print("Use 'mcdp make <project directory>' to build a datapack")
-		print("Use 'mcdp install <module name>' to install a module from the internet")
-		print("Use 'mcdp uninstall <module name>' to uninstall a module")
-		sys.exit(0)
+		help()
 	else:
 		# file name or path may have spaces
 		script_name = ' '.join(sys.argv[2:])
 		if sys.argv[1][0].lower() == "c":
-			# create datapack project
-			pass
+			print(create_project(script_name))
+			
 		elif sys.argv[1][0].lower() == "m":
 			if not os.path.isfile(script_name + "/__main__.dpl"):
 				raise FileNotFoundError("No such file or directory: '%s'" %script_name)
@@ -715,8 +725,4 @@ if __name__ == "__main__":
 			print(uninstall_module(script_name))
 		else:
 			print("Unknown command.")
-			print("Use 'mcdp create <datapack name>' to create a new datapack project")
-			print("Use 'mcdp make <project directory>' to build a datapack")
-			print("Use 'mcdp install <module name>' to install a module from the internet")
-			print("Use 'mcdp uninstall <module name>' to uninstall a module")
-			sys.exit(0)
+			help()
