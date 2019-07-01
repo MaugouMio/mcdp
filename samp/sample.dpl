@@ -1,0 +1,120 @@
+# import all namespaces in sample2.dpl
+import sample2
+# import namespaces test1 and test2 in sample3.dpl
+from sample3 import test1, test2
+# import namespace schedule_loop in sample3.dpl, but don't build the namespace schedule_loop
+from sample3 import schedule_loop as virtual
+
+# Contents after '#' are viewed as comments 
+# '#' must be in the front of a line to be a comment
+# virtual namespaces will not be built, but can be derived
+
+
+
+description = "this is a sample dpl datapack"
+
+
+
+# create a datapack namespace
+namespace samp()
+{
+	# create a folder called 'samp_folder' in 'functions'
+	folder samp_folder()
+	{
+		# create a function called 'say_test' in 'samp_folder'
+		func say_test()
+		{
+			# some commands
+			say Hello
+			say World
+		}
+		# every single '{' and '}' must be in a new line
+		# something like | func test() {    | or | func test()        | are not legal format
+		#	             |   say something  |    | {                  |
+		#                | }                |    |   say something }  |
+		
+		
+		
+		# some python code to generate contents using 'print()'
+		# code indents must align with '```', '\t' is viewed as 4 spaces
+		``` 
+		for i in range(3):
+			print("func sample_py%d()" %i)
+			print("{")
+			print("\tsay python created content %s" %i)
+			print("}")
+		
+		test_dict = {
+			'test': 0
+			'test2': 1
+		} # If you want to use '{' and '}' in your pycode, make sure they are not in a individual line. You can have comments follow with them.
+		```	
+		
+		
+		
+		# create a subfolder called 'sub_folder' in 'samp_folder'
+		folder sub_folder()
+		{
+			# create a function called 'sub_say_test' in 'sub_folder'
+			func sub_say_test()
+			{
+				function samp:samp_folder/say_test
+			}
+		}
+		
+		# copy the 'namespace test1' block and rename it as 'samp_derive1'
+		# you can use ';' to replace an empty {} block
+		folder samp_derive1() from test1();
+		
+		# copy the 'test2:test2_folder' block and rename it as 'samp_derive2'
+		folder samp_derive2 from test2().test2_folder()
+		{
+			# override the original 'samp:samp_derive2/test2_1' function
+			func test2_1()
+			{
+				say overrided!
+			}
+		
+			# create a function 'test2_3' in 'samp:samp_derive2'
+			func test2_3()
+			{
+				say new function!
+			}
+		}
+	}
+	# copy the 'namespace schedule_loop' block and rename it as 'samp_derive3'
+	# replace ARG(path) and ARG(delay) in 'namespace schedule_loop' with 'samp:samp_derive3/' and '5t'
+	# you can pass string arguments wrapped by ""
+	# single quote (') is freely to use in a string argument without escaping
+	folder samp_derive3() from schedule_loop("samp:samp_derive3/", "5t")
+	{
+		# override the original 'samp:samp_derive3/execute' function
+		func execute()
+		{
+			say do something per 5 ticks
+		}
+	}
+}
+			
+##### NOTICE #####
+# namespace samp2()
+# ^^^^
+# This will cause error, since samp2 is already defined by importing sample2
+# If you want to modify the content in samp2, import samp2 as virtual and use 'namespace samp2() from samp2()' instead
+##### NOTICE #####	
+		
+
+# tick and load tags of imported namespaces (excluding virtual namespaces) will be appended to your tag list when imported
+# import a namespace as virtual and derive it, then you can arrange the order of it
+# you can NOT use python codes in a tag block
+tag tick
+{
+	# comments are allowed in a tag block
+	samp:samp_folder/samp_derive2/test2_1
+}
+
+tag load	
+{
+	samp:samp_folder/say_test
+	samp:samp_derive3/loop
+}

@@ -1,0 +1,48 @@
+description = "this is a sample3 dpl datapack"
+
+namespace test1()
+{
+	func for_derive()
+	{
+		say just for derivation
+	}
+}
+		
+namespace test2()
+{
+	folder test2_folder()
+	{
+		func test2_1()
+		{
+			say to be derived
+		}
+			
+		func test2_2()
+		{
+			say not derived
+		}
+	}
+}
+		
+# virtual contents will not be built in a datapack
+# only virtual contents can have arguments
+namespace schedule_loop(path, delay) as virtual
+{
+	func execute() 
+	{
+		# to be overrode
+	}
+	
+	func loop()
+	{
+		function ARG(path)execute
+		schedule function ARG(path)loop ARG(delay)
+	}
+}
+	
+	
+tag load
+{
+	test1:for_derive
+	schedule_loop:loop
+}

@@ -1,0 +1,64 @@
+description = "create random number"
+
+namespace random()
+{
+	func initial()
+	{
+		#the variable scoreboard
+		scoreboard objectives add random dummy
+
+		#some variable definition
+		scoreboard players set #RAND_MAX random 100000
+		scoreboard players set #A random 4321
+		scoreboard players set #C random 9487
+		scoreboard players set #seed random 0
+
+		#the maximum number we want
+		scoreboard players set #max random 0
+		#the minimum number we want
+		scoreboard players set #min random 0
+
+		#set initial seed
+		function random:set_seed
+	}
+	
+	func set_seed()
+	{
+		# use gametime to set seed
+		execute store result score #seed random run time query gametime
+		scoreboard players operation #seed random %= #RAND_MAX random
+	}
+	
+	# pass constant number string or '<entity> <objective>' to min and max
+	# pass '<entity> <objective>' to result to save the generated number
+	func generate(min, max, result) as virtual
+	{
+		# determine whether min and max are constant or specific scoreboard objective
+		```
+		try:
+			print("scoreboard players set #min random %d" %int(ARG(min)))
+		except:
+			print("scoreboard players operation #min random = ARG(min)")
+		try:
+			print("scoreboard players set #max random %d" %int(ARG(max)))
+		except:
+			print("scoreboard players operation #max random = ARG(max)")
+		```
+		
+		scoreboard players operation ARG(result) = #seed random
+		scoreboard players operation #max random -= #min random
+		scoreboard players operation ARG(result) %= #max random
+		scoreboard players operation ARG(result) += #min random
+
+		scoreboard players operation #seed random *= #A random
+		scoreboard players operation #seed random += #C random
+		scoreboard players operation #seed random %= #RAND_MAX random
+	}
+}
+
+
+
+tag load	
+{
+	random:initial
+}

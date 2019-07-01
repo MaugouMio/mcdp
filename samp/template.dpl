@@ -1,0 +1,28 @@
+# import <module name>
+# from <module name> import <namespace1>[, <namespace2>[, ...]]
+
+description = "datapack description"
+
+namespace samp()
+{
+	folder samp_folder()
+	{
+		func samp_function()
+		{
+			say Hello
+			say World
+		}
+	}
+}
+
+
+
+tag tick
+{
+	# samp:samp_folder/samp_function
+}
+
+tag load	
+{
+	# samp:samp_folder/samp_function
+}

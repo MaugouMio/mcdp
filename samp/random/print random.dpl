@@ -1,0 +1,43 @@
+import random
+
+description = "import random and easily use it"
+
+namespace print_loop()
+{
+	func install()
+	{
+		#the variable scoreboard
+		scoreboard objectives add test dummy
+	}
+	
+	# random number between -10 and 10
+	# always use ';' if you define a function from another function template
+	# if you use '{}' after a function definition, the template will be fully overrode by the contents in '{}'
+	func get_random() from random().generate('-10', '10', '@p test');
+	
+	# random number between the current 'test' score of '@p' and 20
+	func get_random2() from random().generate('@p test', '20', '@p test');
+	
+	func print_random()
+	{
+		function my_game:get_random
+		tellraw @a {"score":{"name":"@p","objective":"test"}}
+		
+		function my_game:get_random2
+		tellraw @a {"score":{"name":"@p","objective":"test"}}
+		
+		say === one loop ===
+	}
+}
+
+
+
+tag tick
+{
+	print_loop:print_random
+}
+
+tag load	
+{
+	print_loop:install
+}

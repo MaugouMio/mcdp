@@ -1,0 +1,15 @@
+description = "this is a sample2 dpl datapack"
+
+namespace samp2()
+{
+	func loop()
+	{
+		say sample2 loop
+	}
+}
+
+
+tag tick
+{
+	samp2:loop
+}
