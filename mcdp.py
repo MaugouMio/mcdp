@@ -1,8 +1,12 @@
 # -*- coding: UTF-8 -*-
-import sys, os, shutil
+import sys, os, shutil, configparser
 from io import StringIO
 
-module_path = ["./lib/"]
+config_path = os.path.expandvars("%LOCALAPPDATA%/mcdp")
+config = configparser.ConfigParser()
+config.read(config_path + "/mcdp_config.ini", encoding="utf-8")
+install_path = config.get("Path", "Install")
+module_path = [install_path + "/lib/"]
 
 class Folder:
 	def __init__(self):
@@ -606,29 +610,29 @@ def read_script(script, this_dir):
 #             user functions              #
 ###########################################
 
-def build_datapack(filename):	
-	this_dir = os.path.dirname(os.path.abspath(filename))
-	with open(filename, "r", encoding='UTF-8') as script:
-		description, namespaces, tags = read_script(script.read().splitlines(), this_dir)
+def build_datapack(proj_path):
+	datapack_name = os.path.basename(proj_path)
+	with open(proj_path + "/__main__.dpl", "r", encoding='UTF-8') as script:
+		description, namespaces, tags = read_script(script.read().splitlines(), proj_path)
 	
-	if os.path.isdir(filename):
-		user_response = str(input("Datapack '" + filename[:-4] + "' already exists.\nDo you want to replace it (y/n)? ")).lower()
+	if os.path.isdir("build/" + datapack_name):
+		user_response = str(input("Datapack '" + datapack_name + "' already exists.\nDo you want to replace it (y/n)? ")).lower()
 		while user_response not in ['y', 'n']:
 			user_response = str(input("'%s' was not one of the expected responses: y, n\nDo you want to replace it (y/n)? " %user_response)).lower()
 		
 		if user_response == 'y':
-			shutil.rmtree(filename[:-4])
+			shutil.rmtree("build/" + datapack_name)
 		else:
 			return "Build Canceled."
 
-	os.mkdir(filename)
-	os.mkdir(filename + "/data")
+	os.mkdir("build/" + datapack_name)
+	os.mkdir("build/" + datapack_name + "/data")
 		
 	# generate pack.mcmeta
-	with open(filename + "/pack.mcmeta", "w", encoding="utf-8") as pack:
+	with open("build/" + datapack_name + "/pack.mcmeta", "w", encoding="utf-8") as pack:
 		pack.write('{\n\t"pack":\n\t{\n\t\t"pack_format": 1,\n\t\t"description": "%s"\n\t}\n}' %description)
 		
-	build_dir = filename + "/data/"
+	build_dir = "build/" + datapack_name + "/data/"
 	# recursive build
 	for n in namespaces.keys():
 		namespaces[n].build(build_dir)
@@ -639,47 +643,51 @@ def install_module(module_name):
 	return "Function not implemented yet."
 	
 def uninstall_module(module_name):
-	remove_path = None
+	remove_path = []
 	for path in module_path:
-		if os.path.isfile(path + module_name + "dpl"):
-			remove_path = path + module_name + "dpl"
+		if os.path.isfile(path + module_name + ".dpl"):
+			remove_path.append(path + module_name + ".dpl")
 		elif os.path.isfile(path + module_name + "/__main__.dpl"):
-			remove_path = path + module_name
+			remove_path.append(path + module_name)
 	
-	if remove_path == None:
+	if len(remove_path) == 0:
 		return module_name + " is not installed."
 
-	user_response = str(input("Will remove:\n  " + remove_path + "\nContinue (y/n)? ")).lower()
+	for path in remove_path:
+		print("Will remove:\n  " + path)
+	user_response = str(input("Continue (y/n)? ")).lower()
 	while user_response not in ['y', 'n']:
 		user_response = str(input("'%s' was not one of the expected responses: y, n\nContinue (y/n)? " %user_response)).lower()
 	
 	if user_response == 'y':
-		try:
-			os.remove(remove_path)
-		except OSError:
-			shutil.rmtree(path + module_name)
+		for path in remove_path:
+			try:
+				os.remove(path)
+			except OSError:
+				shutil.rmtree(path)
 	
 	return "Uninstall Success!"
 		
 	
 
 if __name__ == "__main__":
-	if len(sys.argv != 3):
-		print("Unknown command!")
-		print("Use 'mcdp.py make <script file path>' to build a datapack")
-		print("Use 'mcdp.py install <module name>' to install a module from the internet")
-		print("Use 'mcdp.py uninstall <module name>' to uninstall a module")
+	if len(sys.argv < 3):
+		print("Unknown command.")
+		print("Use 'mcdp create <datapack name> <destination folder>' to create a new datapack project")
+		print("Use 'mcdp make <project directory>' to build a datapack")
+		print("Use 'mcdp install <module name>' to install a module from the internet")
+		print("Use 'mcdp uninstall <module name>' to uninstall a module")
 		sys.exit(0)
 	else:
 		# file name or path may have spaces
 		script_name = ' '.join(sys.argv[2:])
-		if sys.argv[1][0].lower() == "m":
-			if script_name[-4:] != ".dpl":
-				script_name += ".dpl"
-				
-			if not os.path.isfile(script_name):
+		if sys.argv[1][0].lower() == "c":
+			# create datapack project
+			pass
+		elif sys.argv[1][0].lower() == "m":
+			if not os.path.isfile(script_name + "/__main__.dpl"):
 				raise FileNotFoundError("No such file or directory: '%s'" %script_name)
-			print(build_datapack(filename))
+			print(build_datapack(script_name))
 			
 		elif sys.argv[1][0].lower() == "i":
 			print(install_module(script_name))
@@ -687,8 +695,9 @@ if __name__ == "__main__":
 		elif sys.argv[1][0].lower() == "u":
 			print(uninstall_module(script_name))
 		else:
-			print("Unknown command!")
-			print("Use 'mcdp.py make <script file path>' to build a datapack")
-			print("Use 'mcdp.py install <module name>' to install a module from the internet")
-			print("Use 'mcdp.py uninstall <module name>' to uninstall a module")
+			print("Unknown command.")
+			print("Use 'mcdp create <datapack name> <destination folder>' to create a new datapack project")
+			print("Use 'mcdp make <project directory>' to build a datapack")
+			print("Use 'mcdp install <module name>' to install a module from the internet")
+			print("Use 'mcdp uninstall <module name>' to uninstall a module")
 			sys.exit(0)
