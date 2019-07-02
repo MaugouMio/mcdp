@@ -171,8 +171,8 @@ def find_lib(script_name, search_path):
 		if path[-1] != '/' and path[-1] != '\\':
 			path += '/'
 			
-		if os.path.isfile(path + script_name + "dpl"):
-			with open(path + script_name + "dpl", "r", encoding='UTF-8') as f:
+		if os.path.isfile(path + script_name + ".dpl"):
+			with open(path + script_name + ".dpl", "r", encoding='UTF-8') as f:
 				script = f.read().splitlines()
 			return script, path
 		elif os.path.isfile(path + script_name + "/__main__.dpl"):
@@ -399,7 +399,7 @@ def parse_definition(line, namespaces):
 
 def add_namespace(name, namespace, namespaces):
 	if name in namespaces.keys() and not namespaces[name].virtual:
-		raise NameError("namespace " + name + " already defined")
+		raise NameError("namespace '" + name + "' already defined")
 	
 	namespaces[name] = namespace
 	
