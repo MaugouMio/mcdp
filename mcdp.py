@@ -616,6 +616,16 @@ def read_script(script, this_dir):
 #             user functions              #
 ###########################################
 
+def create_project(proj_name):
+	if os.path.isdir(proj_name):	
+		return "Destination folder '%s' already exists, please try again with another name." %proj_name
+	
+	os.mkdir(proj_name)
+	os.mkdir(proj_name + "/build")
+	shutil.copyfile(install_path + "/samp/template.dpl", proj_name + "/__main__.dpl")
+	
+	return "Datapack project '%s' created!" %proj_name
+
 def build_datapack(proj_path):
 	# fix path format
 	if proj_path[-1] == '/' or proj_path[-1] == '\\':
@@ -628,13 +638,16 @@ def build_datapack(proj_path):
 	with open(proj_path + "/__main__.dpl", "r", encoding='UTF-8') as script:
 		description, namespaces, tags = read_script(script.read().splitlines(), proj_path)
 	
-	if os.path.isdir("build/" + datapack_name):
+	if not os.path.isdir(proj_path + "/build"):
+		os.mkdir(proj_path + "/build")
+	
+	if os.path.isdir(proj_path + "/build/" + datapack_name):
 		user_response = str(input("Datapack '" + datapack_name + "' already exists.\nDo you want to replace it (y/n)? ")).lower()
 		while user_response not in ['y', 'n']:
 			user_response = str(input("'%s' was not one of the expected responses: y, n\nDo you want to replace it (y/n)? " %user_response)).lower()
 		
 		if user_response == 'y':
-			shutil.rmtree("build/" + datapack_name)
+			shutil.rmtree(proj_path + "/build/" + datapack_name)
 		else:
 			return "Build cancelled."
 
@@ -693,15 +706,6 @@ def uninstall_module(module_name):
 				shutil.rmtree(path)
 	
 	return "%s uninstalled!" %module_name
-
-def create_project(proj_name):
-	if os.path.isdir(proj_name):	
-		return "Destination folder '%s' already exists, please try again with another name." %proj_name
-	
-	os.mkdir(proj_name)
-	shutil.copyfile(install_path + "/samp/template.dpl", proj_name + "/__main__.dpl")
-	
-	return "Datapack project '%s' created!" %proj_name
 	
 def help():
 	print("Use 'mcdp create <datapack name>' to create a new datapack project")
