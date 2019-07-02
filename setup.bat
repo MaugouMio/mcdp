@@ -1,5 +1,6 @@
 @echo off
-set this_path=%PATH%;%~dp0
+set this_path=%~dp0
+set env_path=%PATH%;%~dp0
 
 set var=
 :loop
@@ -11,7 +12,15 @@ goto loop
 
 
 :env
-setx /m PATH "%this_path%"
+set p=%PATH%
+
+:envl
+for /f "tokens=1* delims=;" %%a in ("%p%") do (
+	if "%%a"=="%this_path%" goto setting
+	set p=%%b
+)
+if defined p goto envl
+setx /m PATH "%env_path%
 
 
 :setting

@@ -45,7 +45,7 @@ namespace samp()
 			print("}")
 		
 		test_dict = {
-			'test': 0
+			'test': 0,
 			'test2': 1
 		} # If you want to use '{' and '}' in your pycode, make sure they are not in a individual line. You can have comments follow with them.
 		```	

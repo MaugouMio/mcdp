@@ -44,5 +44,7 @@ namespace schedule_loop(path, delay) as virtual
 tag load
 {
 	test1:for_derive
+	
+	# this will be ignored since 'schedule_loop' is virtual
 	schedule_loop:loop
 }

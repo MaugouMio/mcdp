@@ -13,10 +13,10 @@ namespace print_loop()
 	# random number between -10 and 10
 	# always use ';' if you define a function from another function template
 	# if you use '{}' after a function definition, the template will be fully overrode by the contents in '{}'
-	func get_random() from random().generate('-10', '10', '@p test');
+	func get_random() from random().generate("-10", "10", "@p test");
 	
-	# random number between the current 'test' score of '@p' and 20
-	func get_random2() from random().generate('@p test', '20', '@p test');
+	# random number between the current "test" score of "@p" and 20
+	func get_random2() from random().generate("@p test", "20", "@p test");
 	
 	func print_random()
 	{

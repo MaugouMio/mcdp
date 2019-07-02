@@ -2,11 +2,11 @@
 import sys, os, shutil, configparser
 from io import StringIO
 
-config_path = os.path.expandvars("%LOCALAPPDATA%/mcdp")
+config_path = os.path.expandvars("%LOCALAPPDATA%\\mcdp")
 config = configparser.ConfigParser()
-config.read(config_path + "/mcdp_config.ini", encoding="utf-8")
+config.read(config_path + "\\mcdp_config.ini", encoding="utf-8")
 install_path = config.get("Path", "Install")
-module_path = [install_path + "/lib/"]
+module_path = [install_path + "lib\\"]
 
 class Folder:
 	def __init__(self):
@@ -22,10 +22,11 @@ class Folder:
 		new_folder = Folder()
 		for key in self.items.keys():
 			new_folder.items[key] = self.items[key].copy()
+		new_folder.name = self.name
 		new_folder.virtual = self.virtual
 		new_folder.argv = list(self.argv)
 		new_folder.unparsed = list(self.unparsed)
-		# not copying name and namespace status
+		# not copying namespace status
 		
 		return new_folder
 		
@@ -34,11 +35,11 @@ class Folder:
 			sub_dir = dir + self.name
 			os.mkdir(sub_dir)
 			if self.is_namespace:
-				sub_dir += "/functions"
+				sub_dir += "\\functions"
 				os.mkdir(sub_dir)
 			
 			for key in self.items.keys():
-				self.items[key].build(sub_dir + '/')
+				self.items[key].build(sub_dir + '\\')
 		
 class Function:
 	def __init__(self):
@@ -51,11 +52,11 @@ class Function:
 
 	def copy(self):
 		new_function = Function()
+		new_function.name = self.name
 		new_function.commands = self.commands
 		new_function.virtual = self.virtual
-		new_folder.argv = list(self.argv)
-		new_folder.unparsed = list(self.unparsed)
-		# not copying name
+		new_function.argv = list(self.argv)
+		new_function.unparsed = list(self.unparsed)
 		
 		return new_function
 		
@@ -168,17 +169,17 @@ def legal_name(name):
 def find_lib(script_name, search_path):
 	for path in search_path:
 		# fix directory path
-		if path[-1] != '/' and path[-1] != '\\':
-			path += '/'
+		if path[-1] != '\\' and path[-1] != '/':
+			path += '\\'
 			
 		if os.path.isfile(path + script_name + ".dpl"):
 			with open(path + script_name + ".dpl", "r", encoding='UTF-8') as f:
 				script = f.read().splitlines()
 			return script, path
-		elif os.path.isfile(path + script_name + "/__main__.dpl"):
-			with open(path + script_name + "/__main__.dpl", "r", encoding='UTF-8') as f:
+		elif os.path.isfile(path + script_name + "\\__main__.dpl"):
+			with open(path + script_name + "\\__main__.dpl", "r", encoding='UTF-8') as f:
 				script = f.read().splitlines()
-			return script, path + script_name + '/'
+			return script, path + script_name + '\\'
 			
 	raise ImportError("No module named '" + script_name + "'")
 
@@ -198,10 +199,51 @@ def read_block(code, this, namespaces, argv = [], arg_name = []): # 'this' is a 
 		for j in range(len(argv)):
 			code[i] = code[i].replace("ARG(%s)" %arg_name[j], argv[j])
 	
-	# parse pycode
+	# simply parse python code and return function object
+	if isinstance(this, Function):
+		# parse pycode
+		in_pycode = False
+		indent = 0
+		pycode = ""
+		line_index = 0
+		while line_index < len(code):
+			if in_pycode:
+				if code[line_index].lstrip(" \t").rstrip(" \t") == "```":
+					parsed_pycode = parse_code(pycode).split('\n')
+					for i in range(len(parsed_pycode)):
+						code.insert(line_index + 1, parsed_pycode[len(parsed_pycode) - i - 1])
+					# reset stats
+					del code[line_index]
+					in_pycode = False
+					indent = 0
+					pycode = ""
+				else:
+					pycode += code[line_index].expandtabs(4)[indent:] + '\n'
+					del code[line_index]
+					if line_index == len(code):
+						raise SyntaxError("EOF while scanning python code literal")
+			else:
+				if code[line_index].lstrip(" \t").rstrip(" \t") == "```":
+					in_pycode = True
+					indent = code[line_index].expandtabs(4).find('`')
+					del code[line_index]
+				else:
+					line_index += 1
+					
+		for l in code:
+			this.commands += l.lstrip(" \t").rstrip(" \t") + '\n'
+		return this
+	
+	# read sub blocks in folder object
 	in_pycode = False
 	indent = 0
 	pycode = ""
+	
+	block_stack = 0
+	declare_name = ""
+	block_content = []
+	this_block = None
+	
 	line_index = 0
 	while line_index < len(code):
 		if in_pycode:
@@ -210,82 +252,65 @@ def read_block(code, this, namespaces, argv = [], arg_name = []): # 'this' is a 
 				for i in range(len(parsed_pycode)):
 					code.insert(line_index + 1, parsed_pycode[len(parsed_pycode) - i - 1])
 				# reset stats
-				del code[line_index]
 				in_pycode = False
 				indent = 0
 				pycode = ""
 			else:
 				pycode += code[line_index].expandtabs(4)[indent:] + '\n'
-				del code[line_index]
-				if line_index == len(code):
+				if line_index == (len(code) - 1):
 					raise SyntaxError("EOF while scanning python code literal")
 		else:
-			if code[line_index].lstrip(" \t").rstrip(" \t") == "```":
-				in_pycode = True
-				indent = code[line_index].expandtabs(4).find('`')
-				del code[line_index]
-			else:
-				line_index += 1
-	
-	# simply return function object
-	if isinstance(this, Function):
-		this.commands = '\n'.join(code)
-		return this
-	
-	# read sub blocks in folder object
-	block_stack = 0
-	declare_name = ""
-	block_content = []
-	this_block = None
-	
-	line_index = 0
-	while line_index < len(code):
-		this_line = script[line_index].replace('\t', '')
-		# parsing contents by lines
-		splitted_line = split_by_chars(this_line)
-		# not an empty row or comment
-		if len(splitted_line) > 0 and this_line[0] != '#':
-			if block_stack > 0:
-				end_char = this_line.lstrip().rstrip()
-				if end_char == '{':
-					block_stack += 1
-				elif end_char == '}':
-					block_stack -= 1
-				
-				# copy this line to block_content (without the last '}')
-				if block_stack == 0:
-					# not pure '}' mark
-					if not this_line.lstrip().rstrip() == '}':
-						raise SyntaxError(this_line)
+			this_line = code[line_index].replace('\t', '')
+			# parsing contents by lines
+			splitted_line = split_by_chars(this_line)
+			# not an empty row or comment
+			if len(splitted_line) > 0 and this_line[0] != '#':
+				if block_stack > 0:
+					end_char = this_line.lstrip().rstrip()
+					if end_char == '{':
+						block_stack += 1
+					elif end_char == '}':
+						block_stack -= 1
 					
-					if len(this_block.argv) == 0:
-						this.items[declare_name] = read_block(block_content, this_block, namespaces)
+					# copy this line to block_content (without the last '}')
+					if block_stack == 0:
+						if len(this_block.argv) == 0:
+							this.items[declare_name] = read_block(block_content, this_block, namespaces)
+						else:
+							this_block.unparsed = block_content
+							this.items[declare_name] = this_block
+							
+						# reset content
+						block_content = []
 					else:
-						this_block.unparsed = block_content
-						this.items[declare_name] = this_block
-				else:
-					block_content.append(script[line_index])
-				
-			elif splitted_line[0] == "folder" or splitted_line[0] == "func":
-				declare_name, var, end_char = parse_definition(this_line, namespaces)
-				
-				if end_char == None:
-					this_block = var
-					block_stack += 1
+						block_content.append(code[line_index])
 					
-					# preview and ignore the next line
-					line_index += 1
-					if script[line_index].lstrip(" \t").rstrip(" \t") != '{':
-						raise SyntaxError(script[line_index].lstrip(" \t"))
-				elif end_char == ';':
-					this.items[declare_name] = var
+				elif splitted_line[0] == "folder" or splitted_line[0] == "func":
+					declare_name, var, end_char = parse_definition(this_line, namespaces)
+					
+					if end_char == None:
+						this_block = var
+						block_stack += 1
+						
+						# preview and ignore the next line
+						line_index += 1
+						if code[line_index].lstrip(" \t").rstrip(" \t") != '{':
+							raise SyntaxError(code[line_index].lstrip(" \t"))
+					elif end_char == ';':
+						this.items[declare_name] = var
+					else:
+						raise SyntaxError(this_line)
+						
+				elif splitted_line[0] == "```":
+					in_pycode = True
+					indent = code[line_index].expandtabs(4).find('`')
+					
 				else:
 					raise SyntaxError(this_line)
-							
-			else:
-				raise SyntaxError(this_line)
 		
 		line_index += 1
+	
+	return this
 
 def parse_definition(line, namespaces):
 	argv = []
@@ -294,18 +319,20 @@ def parse_definition(line, namespaces):
 	
 	line = line.rstrip()
 	if line[-1] == ';':
-		sep_line = split_by_chars(line[:-1])
+		sep_line = split_by_chars(line[:-1], local_sign = "()", parse_string = True)
 		end_char = line[-1]
-	elif line[-1] == ')':
-		sep_line = split_by_chars(line)
+	elif line[-1] == ')' or line[-1] == 'l':
+		sep_line = split_by_chars(line, local_sign = "()", parse_string = True)
 	else:
 		raise SyntaxError(line)
 	
 	# parse variable type
 	if sep_line[0] == "namespace" or sep_line[0] == "folder":
 		folder_var = True
+		var = Folder()
 	elif sep_line[0] == "func":
 		folder_var = False
+		var = Function()
 	else:
 		raise SyntaxError(line)
 	
@@ -329,10 +356,10 @@ def parse_definition(line, namespaces):
 				except KeyError:	
 					raise KeyError("object %s not found" %object_name)
 				
-				if len(template.argv) != len(argv):
+				if len(template.argv) != len(sep_line[5]):
 					raise ValueError("wrong number of arguments passed to " + object_name)
-				elif len(argv > 0):
-					template = read_block(template.unparsed, Folder(), namespaces, argv, template.argv)
+				elif len(template.argv) > 0:
+					template = read_block(template.unparsed, template.copy(), namespaces, sep_line[5], template.argv)
 			else:
 				raise SyntaxError(line)
 				
@@ -361,10 +388,10 @@ def parse_definition(line, namespaces):
 						except KeyError:	
 							raise KeyError("object %s not found" %object_name)
 						
-						if len(template.argv) != len(argv):
+						if len(template.argv) != len(sep_line[parsing_index + 1]):
 							raise ValueError("wrong number of arguments passed to " + object_name)
-						elif len(argv > 0):
-							template = read_block(template.unparsed, template.copy(), namespaces, argv, template.argv)
+						elif len(template.argv) > 0:
+							template = read_block(template.unparsed, template.copy(), namespaces, sep_line[parsing_index + 1], template.argv)
 							template.unparsed = []
 					else:
 						raise SyntaxError(line)
@@ -379,16 +406,12 @@ def parse_definition(line, namespaces):
 			
 		elif sep_line[3] == "as":
 			if sep_line[4] == "virtual":
-				if folder_var:
-					var = Folder()
-				else:
-					var = Function()
 				is_virtual = True
 			else:
 				raise SyntaxError(line)
 		else:
 			raise SyntaxError(line)
-				
+		
 	if len(argv) > 0 and not is_virtual:
 		raise ValueError("Arguments can not be assigned to non virtual objects\n  " + line)
 	
@@ -450,15 +473,14 @@ def read_script(script, this_dir):
 					
 					# copy this line to block_content (without the last '}')
 					if block_stack == 0:
-						# not pure '}' mark
-						if not this_line.lstrip().rstrip() == '}':
-							raise SyntaxError(this_line)
-						
 						if len(this_block.argv) == 0:
 							namespaces[declare_name] = read_block(block_content, this_block, namespaces)
 						else:
 							this_block.unparsed = block_content
 							namespaces[declare_name] = this_block
+						
+						# reset content
+						block_content = []
 					else:
 						block_content.append(script[line_index])
 						
@@ -484,20 +506,36 @@ def read_script(script, this_dir):
 						if virtual_namespace and i == (len(splitted_line) - 2):
 							break
 						
-						junk_description, imported, imported_tags = read_script(find_lib(splitted_line[i], search_path))
+						imported_script, imported_from = find_lib(splitted_line[i], search_path)
+						junk_description, imported, imported_tags = read_script(imported_script, imported_from)
 						if virtual_namespace:
 							# set namespaces as virtual
 							for key in imported.keys():
 								imported[key].virtual = True
 							# ignore tags
 							imported_tags = {}
+						else:
+							# ignore tags of originally virtual namespaces
+							imported_namespaces = list(imported.keys())
+							ignore_namespaces = []
+							for key in imported_namespaces:
+								if imported[key].virtual:
+									ignore_namespaces.append(key)
+							
+							for tag_key in imported_tags.keys():
+								tag_index = 0
+								while tag_index < len(imported_tags[tag_key]):
+									if imported_tags[tag_key][tag_index].lstrip('"').rstrip('"').split(':')[0] in ignore_namespaces:
+										del imported_tags[tag_key][tag_index]
+									else:
+										tag_index += 1
 						
 						# check duplicated namespaces
 						for key in imported.keys():
 							if key in namespaces.keys() and namespaces[key].virtual == False:
 								raise NameError("namespace " + key + " already defined")
 						
-						merge_two_dicts(namespaces, imported)
+						namespaces = merge_two_dicts(namespaces, imported)
 						# append tags
 						for key in imported_tags.keys():
 							for tag in imported_tags[key]:
@@ -511,13 +549,13 @@ def read_script(script, this_dir):
 						raise SyntaxError(this_line)
 						
 					virtual_namespace = splitted_line[-2] == "as" and splitted_line[-1] == "virtual"
-					# delete unneeded namespaces
-					junk_description, imported, imported_tags = read_script(find_lib(splitted_line[1], search_path))
-					# ignore all tags when import as virtual
-					if virtual_namespace:
-						imported_tags = {}
 					
+					imported_script, imported_from = find_lib(splitted_line[1], search_path)
+					junk_description, imported, imported_tags = read_script(imported_script, imported_from)
+					
+					# delete unneeded namespaces
 					imported_namespaces = list(imported.keys())
+					ignore_namespaces = []
 					for key in imported_namespaces:
 						if virtual_namespace:
 							if key not in splitted_line[3:-2]:
@@ -525,19 +563,30 @@ def read_script(script, this_dir):
 							else:
 								# set namespaces as virtual
 								imported[key].virtual = True
+							ignore_namespaces.append(key)
 						else:
 							if key not in splitted_line[3:]:
 								imported.pop(key)
-								# ignore tags of not imported namespaces
-								for tag_key in imported_tags.keys():
-									tag_index = 0
-									while tag_index < len(imported_tags[tag_key]):
-										if imported_tags[tag_key][tag_index].split(':')[0] == key:
-											del imported_tags[tag_key][tag_index]
-										else:
-											tag_index += 1
+								ignore_namespaces.append(key)
+							else:
+								if imported[key].virtual:
+									ignore_namespaces.append(key)
+								
+					# ignore tags of virtual and not imported namespaces
+					for tag_key in imported_tags.keys():
+						tag_index = 0
+						while tag_index < len(imported_tags[tag_key]):
+							if imported_tags[tag_key][tag_index].lstrip('"').rstrip('"').split(':')[0] in ignore_namespaces:
+								del imported_tags[tag_key][tag_index]
+							else:
+								tag_index += 1
 												
-					merge_two_dicts(namespaces, imported)
+					# check duplicated namespaces
+					for key in imported.keys():
+						if key in namespaces.keys() and namespaces[key].virtual == False:
+							raise NameError("namespace " + key + " already defined")
+					
+					namespaces = merge_two_dicts(namespaces, imported)
 					# append tags
 					for key in imported_tags.keys():
 						for tag in imported_tags[key]:
@@ -566,14 +615,14 @@ def read_script(script, this_dir):
 				
 				
 				# python codes to generate contents
-				elif splitlines[0] == "```":
+				elif splitted_line[0] == "```":
 					in_pycode = True
 				
 				
 				
 				# add minecraft tags
-				elif splitlines[0] == "tag":
-					if splitlines[1] == "tick" or splitlines[1] == "load":
+				elif splitted_line[0] == "tag":
+					if splitted_line[1] == "tick" or splitted_line[1] == "load":
 						line_index += 1
 						if script[line_index].lstrip(" \t").rstrip(" \t") != '{':
 							raise SyntaxError(script[line_index].lstrip(" \t"))
@@ -592,7 +641,7 @@ def read_script(script, this_dir):
 									if tag_content[-1] != '"':
 										tag_content += '"'
 										
-									tags[splitlines[1]].append(tag_content)
+									tags[splitted_line[1]].append(tag_content)
 									if line_index == (len(script) - 1):
 										raise SyntaxError("EOF while scanning tag literal")
 									
@@ -621,44 +670,44 @@ def create_project(proj_name):
 		return "Destination folder '%s' already exists, please try again with another name." %proj_name
 	
 	os.mkdir(proj_name)
-	os.mkdir(proj_name + "/build")
-	shutil.copyfile(install_path + "/samp/template.dpl", proj_name + "/__main__.dpl")
+	os.mkdir(proj_name + "\\build")
+	shutil.copyfile(install_path + "samp\\template.dpl", proj_name + "\\__main__.dpl")
 	
 	return "Datapack project '%s' created!" %proj_name
 
 def build_datapack(proj_path):
 	# fix path format
-	if proj_path[-1] == '/' or proj_path[-1] == '\\':
+	if proj_path[-1] == '\\' or proj_path[-1] == '/':
 		proj_path = proj_path[:-1]
 		
-	if not os.path.isfile(proj_path + "/__main__.dpl"):
-		return "No such file or directory:\n  %s" %proj_path
+	if not os.path.isfile(proj_path + "\\__main__.dpl"):
+		return "No such file or directory:\n  '%s'" %proj_path + "\\__main__.dpl"
 	
 	datapack_name = os.path.basename(proj_path)
-	with open(proj_path + "/__main__.dpl", "r", encoding='UTF-8') as script:
+	with open(proj_path + "\\__main__.dpl", "r", encoding='UTF-8') as script:
 		description, namespaces, tags = read_script(script.read().splitlines(), proj_path)
 	
-	if not os.path.isdir(proj_path + "/build"):
-		os.mkdir(proj_path + "/build")
+	if not os.path.isdir(proj_path + "\\build"):
+		os.mkdir(proj_path + "\\build")
 	
-	if os.path.isdir(proj_path + "/build/" + datapack_name):
+	if os.path.isdir(proj_path + "\\build\\" + datapack_name):
 		user_response = str(input("Datapack '" + datapack_name + "' already exists.\nDo you want to replace it (y/n)? ")).lower()
 		while user_response not in ['y', 'n']:
 			user_response = str(input("'%s' was not one of the expected responses: y, n\nDo you want to replace it (y/n)? " %user_response)).lower()
 		
 		if user_response == 'y':
-			shutil.rmtree(proj_path + "/build/" + datapack_name)
+			shutil.rmtree(proj_path + "\\build\\" + datapack_name)
 		else:
 			return "Build cancelled."
 
-	os.mkdir(proj_path + "/build/" + datapack_name)
-	os.mkdir(proj_path + "/build/" + datapack_name + "/data")
+	os.mkdir(proj_path + "\\build\\" + datapack_name)
+	os.mkdir(proj_path + "\\build\\" + datapack_name + "\\data")
 		
 	# generate pack.mcmeta
-	with open(proj_path + "/build/" + datapack_name + "/pack.mcmeta", "w", encoding="utf-8") as pack:
+	with open(proj_path + "\\build\\" + datapack_name + "\\pack.mcmeta", "w", encoding="utf-8") as pack:
 		pack.write('{\n\t"pack":\n\t{\n\t\t"pack_format": 1,\n\t\t"description": "%s"\n\t}\n}' %description)
 		
-	build_dir = proj_path + "/build/" + datapack_name + "/data/"
+	build_dir = proj_path + "\\build\\" + datapack_name + "\\data\\"
 	# recursive build
 	for n in namespaces.keys():
 		namespaces[n].build(build_dir)
@@ -666,11 +715,11 @@ def build_datapack(proj_path):
 	# build tags
 	if not os.path.isdir(build_dir + "minecraft"):
 		os.mkdir(build_dir + "minecraft")
-	if not os.path.isdir(build_dir + "minecraft/tags"):
-		os.mkdir(build_dir + "minecraft/tags")
-	if not os.path.isdir(build_dir + "minecraft/tags/functions"):
-		os.mkdir(build_dir + "minecraft/tags/functions")
-	build_dir += "minecraft/tags/functions/"
+	if not os.path.isdir(build_dir + "minecraft\\tags"):
+		os.mkdir(build_dir + "minecraft\\tags")
+	if not os.path.isdir(build_dir + "minecraft\\tags\\functions"):
+		os.mkdir(build_dir + "minecraft\\tags\\functions")
+	build_dir += "minecraft\\tags\\functions\\"
 	
 	for key in tags.keys():
 		with open(build_dir + key + ".json", "w", encoding="utf-8") as f:
@@ -686,7 +735,7 @@ def uninstall_module(module_name):
 	for path in module_path:
 		if os.path.isfile(path + module_name + ".dpl"):
 			remove_path.append(path + module_name + ".dpl")
-		elif os.path.isfile(path + module_name + "/__main__.dpl"):
+		elif os.path.isfile(path + module_name + "\\__main__.dpl"):
 			remove_path.append(path + module_name)
 	
 	if len(remove_path) == 0:
@@ -704,8 +753,9 @@ def uninstall_module(module_name):
 				os.remove(path)
 			except OSError:
 				shutil.rmtree(path)
-	
-	return "%s uninstalled!" %module_name
+		return "%s uninstalled!" %module_name
+		
+	return "Uninstallation cancelled."
 	
 def help():
 	print("Use 'mcdp create <datapack name>' to create a new datapack project")
@@ -716,7 +766,9 @@ def help():
 	
 
 if __name__ == "__main__":
-	if len(sys.argv < 3):
+	if len(sys.argv) < 3:
+		if len(sys.argv) > 1:
+			print("Unknown command.")
 		help()
 	else:
 		# file name or path may have spaces

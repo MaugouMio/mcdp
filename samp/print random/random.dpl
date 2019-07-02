@@ -36,11 +36,11 @@ namespace random()
 		# determine whether min and max are constant or specific scoreboard objective
 		```
 		try:
-			print("scoreboard players set #min random %d" %int(ARG(min)))
+			print("scoreboard players set #min random %d" %int('ARG(min)'))
 		except:
 			print("scoreboard players operation #min random = ARG(min)")
 		try:
-			print("scoreboard players set #max random %d" %int(ARG(max)))
+			print("scoreboard players set #max random %d" %int('ARG(max)'))
 		except:
 			print("scoreboard players operation #max random = ARG(max)")
 		```
