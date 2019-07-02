@@ -373,10 +373,10 @@ def parse_definition(line, namespaces):
 			
 			# inconsistent variable type
 			if (folder_var and isinstance(template, Function)) or (not folder_var and isinstance(template, Folder)):
-				raise TypeError("type of '%s' is not compatible with '%s'" % (object_name, sep_line[0])
+				raise TypeError("type of '%s' is not compatible with '%s'" % (object_name, sep_line[0]))
 			
 			var = template.copy()
-				
+			
 		elif sep_line[3] == "as":
 			if sep_line[4] == "virtual":
 				if folder_var:
