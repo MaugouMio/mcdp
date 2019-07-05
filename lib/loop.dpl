@@ -46,7 +46,7 @@ namespace for_loop()
 		scoreboard objectives add for_loop_times dummy
 	}
 	
-	folder for(times, condition)
+	folder for(times, condition) as virtual
 	{
 		func execute() 
 		{
