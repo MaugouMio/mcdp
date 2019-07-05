@@ -5,7 +5,7 @@ dpl scripts help you to write minecraft functions easier, and allow you to call 
 This program is still in development stage, and is fully open source.<br>
 I wish to build a community of creators to contribute your scripts on the internet, that makes creating easier.<br>
 <br>
-dpl script introduction: <>
+dpl script introduction: <https://github.com/MaugouMio/MCDP/tree/master/tutorial/English><br>
 Built in library API: <https://github.com/MaugouMio/MCDP/tree/master/lib>
 <br>
 <br>
@@ -15,5 +15,5 @@ dpl 腳本文件旨在協助創作者更加方便的編寫 Minecraft functions�
 這款軟體仍在開發階段，並且完全開源。<br>
 未來期望可以建立一個創作者的社群以及 dpl 函式庫，降低創作的門檻。<br>
 <br>
-dpl 格式介紹：<https://home.gamer.com.tw/creationDetail.php?sn=4447273>
+dpl 格式介紹：<https://github.com/MaugouMio/MCDP/tree/master/tutorial/Chinese><br>
 內建函式庫 API：<https://github.com/MaugouMio/MCDP/tree/master/lib>
