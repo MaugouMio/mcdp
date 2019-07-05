@@ -6,9 +6,9 @@ This program is still in development stage, and is fully open source.<br>
 I wish to build a community of creators to contribute your scripts on the internet, that makes creating easier.<br>
 <br>
 Tutorial: <https://github.com/MaugouMio/MCDP/tree/master/tutorial/English><br>
-Built in library API: <https://github.com/MaugouMio/MCDP/tree/master/lib>
+Built in library API: <https://github.com/MaugouMio/MCDP/tree/master/lib><br>
 <br>
-=============================================<br>
+---
 <br>
 MCDP 是一款建置資料包的軟體，你可以透過他將 dpl 腳本文件建置成資料包。<br>
 dpl 腳本文件旨在協助創作者更加方便的編寫 Minecraft functions，並且可以引用其它 dpl 腳本中的內容增加可讀性與開發效率。<br>
