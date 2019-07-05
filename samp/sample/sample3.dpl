@@ -26,7 +26,7 @@ namespace test2()
 		
 # virtual contents will not be built in a datapack
 # only virtual contents can have arguments
-namespace schedule_loop(path, delay) as virtual
+namespace schedule_loop(delay) as virtual
 {
 	func execute() 
 	{
@@ -35,8 +35,8 @@ namespace schedule_loop(path, delay) as virtual
 	
 	func loop()
 	{
-		function ARG(path)execute
-		schedule function ARG(path)loop ARG(delay)
+		function ARG(_PATH)execute
+		schedule function ARG(_PATH)loop ARG(delay)
 	}
 }
 	

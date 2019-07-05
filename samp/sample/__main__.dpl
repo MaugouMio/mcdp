@@ -86,7 +86,7 @@ namespace samp()
 	# replace ARG(path) and ARG(delay) in 'namespace schedule_loop' with 'samp:samp_derive3/' and '5t'
 	# you can pass string arguments wrapped by ""
 	# single quote (') is freely to use in a string argument without escaping
-	folder samp_derive3() from schedule_loop("samp:samp_derive3/", "5t")
+	folder samp_derive3() from schedule_loop("5t")
 	{
 		# override the original 'samp:samp_derive3/execute' function
 		func execute()

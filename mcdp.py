@@ -274,7 +274,7 @@ def read_block(code, this, namespaces, argv = [], arg_name = []): # 'this' is a 
 					
 					# copy this line to block_content (without the last '}')
 					if block_stack == 0:
-						if len(this_block.argv) == 0:
+						if not this_block.virtual:
 							this.items[declare_name] = read_block(block_content, this_block, namespaces)
 						else:
 							this_block.unparsed = block_content
@@ -358,8 +358,9 @@ def parse_definition(line, namespaces):
 				
 				if len(template.argv) != len(sep_line[5]):
 					raise ValueError("wrong number of arguments passed to " + object_name)
-				elif len(template.argv) > 0:
+				elif template.virtual:
 					template = read_block(template.unparsed, template.copy(), namespaces, sep_line[5], template.argv)
+					template.unparsed = []
 			else:
 				raise SyntaxError(line)
 				
@@ -390,7 +391,7 @@ def parse_definition(line, namespaces):
 						
 						if len(template.argv) != len(sep_line[parsing_index + 1]):
 							raise ValueError("wrong number of arguments passed to " + object_name)
-						elif len(template.argv) > 0:
+						elif template.virtual:
 							template = read_block(template.unparsed, template.copy(), namespaces, sep_line[parsing_index + 1], template.argv)
 							template.unparsed = []
 					else:
