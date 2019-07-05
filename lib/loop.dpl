@@ -1,0 +1,94 @@
+description = "easily create loops"
+
+namespace schedule_loop(delay, condition) as virtual
+{
+	func execute() 
+	{
+		# to be overrode
+	}
+	
+	func run()
+	{
+		```
+		# null condition
+		if 'ARG(condition)' == '':
+			print("function ARG(_PATH)execute")
+			print("schedule function ARG(_PATH)run ARG(delay)")
+		else:
+			print("execute ARG(condition) run function ARG(_PATH)execute")
+			print("execute ARG(condition) run schedule function ARG(_PATH)run ARG(delay)")
+		```
+	}
+}
+
+
+
+namespace while_loop(condition) as virtual
+{
+	func execute() 
+	{
+		# to be overrode
+	}
+	
+	func run()
+	{
+		execute ARG(condition) run function ARG(_PATH)execute
+		execute ARG(condition) run function ARG(_PATH)run
+	}
+}
+
+
+
+namespace for_loop()
+{
+	func initial()
+	{
+		scoreboard objectives add for_loop_times dummy
+	}
+	
+	folder for(times, condition)
+	{
+		func execute() 
+		{
+			# to be overrode
+		}
+		
+		func run()
+		{
+			# determine whether times is constant or specific scoreboard objective
+			# also check some argument validity
+			```
+			try:
+				print("scoreboard players set #for_loop_times for_loop_times %d" %int('ARG(times)'))
+			except:
+				if len('ARG(times)'.split(' ')) != 2:
+					raise ValueError("Argument 'times' must be an integer or an '<entity> <scoreboard objective>' string.")
+				print("scoreboard players operation #for_loop_times for_loop_times = ARG(times)")
+			```
+			
+			function ARG(_PATH)loop
+		}
+		
+		func loop()
+		{
+			scoreboard players remove #for_loop_times for_loop_times 1
+			
+			```
+			# null condition
+			if 'ARG(condition)' == '':
+				print("execute if score #for_loop_times for_loop_times matches 0.. run function ARG(_PATH)execute")
+				print("execute if score #for_loop_times for_loop_times matches 0.. run function ARG(_PATH)loop")
+			else:
+				print("execute if score #for_loop_times for_loop_times matches 0.. ARG(condition) run function ARG(_PATH)execute")
+				print("execute if score #for_loop_times for_loop_times matches 0.. ARG(condition) run function ARG(_PATH)loop")
+			```
+		}
+	}
+}
+
+
+
+tag load	
+{
+	for_loop:initial
+}
