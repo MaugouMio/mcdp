@@ -12,16 +12,16 @@
   Derivable objects: <br>
   - `schedule_loop(delay, condition)`<br>
     type: **namespace** <br>
-    >Creates a folder with specific functions, that will execute specific function every `delay`.
-    >If `condition` is not empty, the scheduled function will be executed using `execute <condition> run ...`.
-    >You have to derive `func execute()` in this folder, which will be executed every loop.
+    >Creates a folder with specific functions, that will execute specific function every `delay`.<br>
+    >If `condition` is not empty, the scheduled function will be executed using `execute <condition> run ...`.<br>
+    >You have to derive `func execute()` in this folder, which will be executed every loop.<br>
     >Call `run` function in this folder to start the loop.
 
-    Arguments:<br>
+    **Arguments:** <br>
     `delay`: An acceptable delay when using schedule command.<br>
     `condition`: A set of execute command syntax that will be used to execute specific function and reschedule function.
 
-    Example usage:<br>
+    **Example usage:** <br>
     ```
     # run "function test:exe_per_5t/run" to start the loop
     # make every player say his/her name every 5 ticks, until no one is standing on a stone block
@@ -39,14 +39,14 @@
   Derivable objects: <br>
   - `while_loop(delay, condition)`<br>
     type: **namespace** <br>
-    >Creates a folder with specific functions, that will instantly execute specific function many times until the condition is not met.
-    >You have to derive `func execute()` in this folder, which will be executed every loop.
+    >Creates a folder with specific functions, that will instantly execute specific function many times until the condition is not met.<br>
+    >You have to derive `func execute()` in this folder, which will be executed every loop.<br>
     >Call `run` function in this folder to start the loop.
 
-    Arguments:<br>
+    **Arguments:** <br>
     `condition`: A set of execute command syntax that will be used to execute specific function and decide whether to loop again.
 
-    Example usage:<br>
+    **Example usage:** <br>
     ```
     # make a player run "function test:while_drop/run" to start the loop
     # tp the player straight down until the block below is a stone block.
@@ -67,15 +67,15 @@
   Derivable objects: <br>
   - `for_loop().for(times, condition)`<br>
     type: **folder** <br>
-    >Creates a folder with specific functions, that will instantly execute specific function for specific times or until the condition is not met.
-    >You have to derive `func execute()` in this folder, which will be executed every loop.
+    >Creates a folder with specific functions, that will instantly execute specific function for specific times or until the condition is not met.<br>
+    >You have to derive `func execute()` in this folder, which will be executed every loop.<br>
     >Call `run` function in this folder to start the loop.
 
-    Arguments:<br>
+    **Arguments:** <br>
     `times`: A constant integer or `<entity> <scoreboard objectives>` string.
     `condition`: A set of execute command syntax that will be used to execute specific function and decide whether to loop again.
 
-    Example usage:<br>
+    **Example usage:** <br>
     ```
     # make a player run "function test:for_forward/run" to start the loop
     # tp the player foward 5 times or until the forward block is a stone block.
