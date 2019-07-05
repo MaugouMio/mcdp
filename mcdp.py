@@ -30,7 +30,10 @@ class Folder:
 		
 		return new_folder
 		
-	def build(self, dir):
+	def build(self, dir, func_path):
+		if not self.is_namespace:
+			func_path = func_path + self.name + '/'
+			
 		if not self.virtual:
 			sub_dir = dir + self.name
 			os.mkdir(sub_dir)
@@ -39,7 +42,7 @@ class Folder:
 				os.mkdir(sub_dir)
 			
 			for key in self.items.keys():
-				self.items[key].build(sub_dir + '\\')
+				self.items[key].build(sub_dir + '\\', func_path)
 		
 class Function:
 	def __init__(self):
@@ -60,7 +63,8 @@ class Function:
 		
 		return new_function
 		
-	def build(self, dir):
+	def build(self, dir, func_path):
+		self.commands = self.commands.replace("ARG(_PATH)", func_path)
 		if not self.virtual:
 			with open(dir + self.name + ".mcfunction", "w", encoding="utf-8") as f:
 				f.write(self.commands)
@@ -711,7 +715,7 @@ def build_datapack(proj_path):
 	build_dir = proj_path + "\\build\\" + datapack_name + "\\data\\"
 	# recursive build
 	for n in namespaces.keys():
-		namespaces[n].build(build_dir)
+		namespaces[n].build(build_dir, namespaces[n].name + ':')
 	
 	# build tags
 	if not os.path.isdir(build_dir + "minecraft"):

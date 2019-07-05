@@ -67,7 +67,7 @@ namespace samp()
 		folder samp_derive1() from test1();
 		
 		# copy the 'test2:test2_folder' block and rename it as 'samp_derive2'
-		folder samp_derive2 from test2().test2_folder()
+		folder samp_derive2() from test2().test2_folder()
 		{
 			# override the original 'samp:samp_derive2/test2_1' function
 			func test2_1()

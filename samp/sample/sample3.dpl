@@ -35,6 +35,7 @@ namespace schedule_loop(delay) as virtual
 	
 	func loop()
 	{
+		# ARG(_PATH) is a system argument that will be replaced by the function path of its directory, only works in func contents
 		function ARG(_PATH)execute
 		schedule function ARG(_PATH)loop ARG(delay)
 	}
