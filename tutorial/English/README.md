@@ -36,15 +36,15 @@ The script is read line by line. Indents are not restricted instead of inserted 
 
 	For instance you can use `namespace test()` to declare a `namespace folder` called `test`. Remember that all `folder` and `func` variables must belong to a `namespace`, and `namespace` variables must NOT belong to another namespace. There can be arguments in the parentheses, sepeated by spaces and commas. Arguments can be string objects. Be ware that variables with arguments can be only defined *virtual* (`as virtual`), which will be introduced later.
 
-	宣告完一個檔案後可以在同一行後面加上其它參數，例如`from`與`as virtual`。
-	其中`from`後面必須接續其它已定義的檔案，例如`folder test2() from test()`會將上述宣告的`test`這個`namespace`中定義的內容複製到`test2`這個資料夾。若`test`有設定參數，這邊也需要在`test`後面的小括號傳入對應數量的參數。假設`test`這個`namespace`中有另外宣告`test3`這個資料夾，若是想要複製`test3`的內容到`test2`中，則可以使用`folder test2() from test().test3()`，以點`.`來串接子檔案。
+	After declaring a variable, you can append some other syntax conponents like `from` and `as virtual`.
+	`from` argument has to follow up with another declared variable. For example, `folder test2() from test()` copies the contents of the `namespace` `test` to the `test2` variable. If there are arguments for `test`, you have to pass corresponding arguments to it. If you want to copy the contents of the child variable of `test`, for example, `test3` folder variable, you can use `folder test2() from test().test3()`, using `.` to concatenate child variables.
 
-	要注意`from`的來源檔案類型必須與宣告的檔案類型相容，其中`func`不可以與`namespace`或`folder`相容，但`namespace`與`folder`類型則可相容。
+	Be ware that the variable types must be compatible when using `from`. `func` vairable is only compatible to itself, but `namespace` and `folder` variables are compatible to each other.
 
-	而`as virtual`必須宣告在該行的最後面，代表這個檔案是*虛擬檔案*。虛擬檔案可以被其它宣告的檔案使用`from`來引用，但是不會在建置資料包的時候被建置出來。
+	`as virtual` must be used after all the other syntax conponents, to make the declared variable *virtual*. Virtual variables can be referenced by other variables using `from`, but will not be built as a file in the datapack.
 
--	**區塊：** 完成檔案的宣告後，會從接下來的內容中讀取區塊。<br>
-	區塊是由大括號`{}`包裝的範圍，其中`{`與`}`兩個符號都必須個別存在獨立的一行中，不可包含其它內容，否則會導致判讀錯誤。另外可以在宣告檔案的那行的末尾加上分號`;`代表一個空的區塊，例如`func test();`。分號在資料夾類型的檔案宣告中與空的括號無異，但在`function`檔案的宣告中，如果使用空括號則會由空的內容取代先前已經存在的內容。
+-	**Block:** After reading variable declaration, the program will start to read the following block.<br>
+	A block is an area of codes embraced in curly brackets `{}`. Both `{` and `}` have to be in an individual line. You can use a `;` mark at the end of the variable declaration to represent an empty block. For example, `func test();`. If you are declaring a `func` variable `from` another variable, you must use `;` instead of writing no contents in curly brackets, or the contents copied from the other variable will be replaced. 
 
 	資料夾類型檔案的區塊中可以宣告其它資料夾檔案或`function`檔案，而`function`檔案的區塊中則是每一行都視為一條 Minecraft 指令，並且忽略縮排。
 
