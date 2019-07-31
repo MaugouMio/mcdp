@@ -29,7 +29,10 @@
     {
       folder exe_per_5t() from schedule_loop(5t, "as @a at @s if block ~ ~-1 ~ minecraft:stone")
       {
-        say @s
+        func execute()
+        {
+          say @s
+        }
       }
     }
     ```
