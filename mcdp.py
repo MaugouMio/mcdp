@@ -164,6 +164,21 @@ def legal_name(name):
 	
 	return name
 
+def folder_copy(root_src_dir, root_dst_dir):
+	for src_dir, dirs, files in os.walk(root_src_dir):
+		dst_dir = src_dir.replace(root_src_dir, root_dst_dir, 1)
+		if not os.path.exists(dst_dir):
+			os.makedirs(dst_dir)
+		for file_ in files:
+			src_file = os.path.join(src_dir, file_)
+			dst_file = os.path.join(dst_dir, file_)
+			if os.path.exists(dst_file):
+				# in case of the src and dst are the same file
+				if os.path.samefile(src_file, dst_file):
+					continue
+				os.remove(dst_file)
+			shutil.copy2(src_file, dst_dir)
+
 ###########################################
 #             tool functions              #
 # ======================================= #
@@ -676,6 +691,7 @@ def create_project(proj_name):
 	
 	os.mkdir(proj_name)
 	os.mkdir(proj_name + "\\build")
+	os.mkdir(proj_name + "\\data")
 	shutil.copyfile(install_path + "samp\\template.dpl", proj_name + "\\__main__.dpl")
 	
 	return "Datapack project '%s' created!" %proj_name
@@ -724,11 +740,13 @@ def build_datapack(proj_path):
 		os.mkdir(build_dir + "minecraft\\tags")
 	if not os.path.isdir(build_dir + "minecraft\\tags\\functions"):
 		os.mkdir(build_dir + "minecraft\\tags\\functions")
-	build_dir += "minecraft\\tags\\functions\\"
 	
 	for key in tags.keys():
-		with open(build_dir + key + ".json", "w", encoding="utf-8") as f:
+		with open(build_dir + "minecraft\\tags\\functions\\" + key + ".json", "w", encoding="utf-8") as f:
 			f.write('{\n\t"values":[\n\t\t%s\n\t]\n}' %",\n\t\t".join(tags[key]))
+	
+	# copy side packages
+	folder_copy(proj_path + "\\data\\", build_dir)
 	
 	return "Build completed!"
 	
