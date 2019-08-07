@@ -1,0 +1,76 @@
+description = "some algorithm"
+
+namespace compare()
+{
+	func initial()
+	{
+		scoreboard objectives add compare_num dummy
+	}
+	
+	folder min(targets, objective, result_tag)
+	{
+		func search()
+		{
+			tag ARG(targets) add algorithm_min_target
+			
+			# initial target
+			scoreboard players operation #ALGORITHM compare_num = @e[tag=algorithm_min_target,limit=1] ARG(objective)
+			tag @e[tag=algorithm_min_target,limit=1] add ARG(result_tag)
+			tag @e[tag=algorithm_min_target,limit=1] remove algorithm_min_target
+			
+			execute if entity @e[tag=algorithm_min_target] run function ARG(_PATH)loop
+		}
+		
+		func loop()
+		{
+			execute as @e[tag=algorithm_min_target,limit=1] if score @s ARG(objective) < #ALGORITHM compare_num run function ARG(_PATH)update_result
+			tag @e[tag=algorithm_min_target,limit=1] remove algorithm_min_target
+			
+			execute if entity @e[tag=algorithm_min_target] run function ARG(_PATH)loop
+		}
+		
+		func update_result()
+		{
+			scoreboard players operation #ALGORITHM compare_num = @s ARG(objective)
+			tag @e[tag=ARG(result_tag)] remove ARG(result_tag)
+			tag @s add ARG(result_tag)
+		}
+	}
+	
+	folder max(targets, objective, result_tag)
+	{
+		func search()
+		{
+			tag ARG(targets) add algorithm_min_target
+			
+			# initial target
+			scoreboard players operation #ALGORITHM compare_num = @e[tag=algorithm_min_target,limit=1] ARG(objective)
+			tag @e[tag=algorithm_min_target,limit=1] add ARG(result_tag)
+			tag @e[tag=algorithm_min_target,limit=1] remove algorithm_min_target
+			
+			execute if entity @e[tag=algorithm_min_target] run function ARG(_PATH)loop
+		}
+		
+		func loop()
+		{
+			execute as @e[tag=algorithm_min_target,limit=1] if score @s ARG(objective) > #ALGORITHM compare_num run function ARG(_PATH)update_result
+			tag @e[tag=algorithm_min_target,limit=1] remove algorithm_min_target
+			
+			execute if entity @e[tag=algorithm_min_target] run function ARG(_PATH)loop
+		}
+		
+		func update_result()
+		{
+			scoreboard players operation #ALGORITHM compare_num = @s ARG(objective)
+			tag @e[tag=ARG(result_tag)] remove ARG(result_tag)
+			tag @s add ARG(result_tag)
+		}
+	}
+}
+
+
+
+tag load	
+{
+	compare:initial
+}
