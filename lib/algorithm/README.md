@@ -1,4 +1,4 @@
-# random API
+# algorithm API
 
 ## Callable functions
 
@@ -48,4 +48,4 @@
 ## Used tags
 
 -	load
-	-	`random:initial`
+	-	`algorithm:initial`
