@@ -3,8 +3,8 @@
 ## Callable functions
 
 -	`random:initial`<br>
-	>Initializes scoreboard objectives and uses current gametime to set seed.
-	>Called by `load` function
+	>Initializes scoreboard objectives and uses current gametime to set seed.<br>
+	>@ Called by `load` function
 
 -	`random:set_seed`<br>
 	>Uses current gametime to set seed.
