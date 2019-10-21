@@ -65,6 +65,9 @@ class Function:
 		
 	def build(self, dir, func_path):
 		self.commands = self.commands.replace("ARG(_PATH)", func_path)
+		if self.commands.find("ARG(__PATH)") >= 0 and max(func_path[:-1].rfind(':'), func_path[:-1].rfind('/')) < 0:
+			raise ValueError("ARG(__PATH) not exist\n  %s" %(func_path + self.name))
+		self.commands = self.commands.replace("ARG(__PATH)", func_path[:(max(func_path[:-1].rfind(':'), func_path[:-1].rfind('/')) + 1)])
 		if not self.virtual:
 			with open(dir + self.name + ".mcfunction", "w", encoding="utf-8") as f:
 				f.write(self.commands)
@@ -730,8 +733,12 @@ def build_datapack(proj_path):
 		
 	build_dir = proj_path + "\\build\\" + datapack_name + "\\data\\"
 	# recursive build
-	for n in namespaces.keys():
-		namespaces[n].build(build_dir, namespaces[n].name + ':')
+	try:
+		for n in namespaces.keys():
+			namespaces[n].build(build_dir, namespaces[n].name + ':')
+	except ValueError as err:
+		shutil.rmtree(proj_path + "\\build\\" + datapack_name)
+		return "ValueError: " + err.args[0] + "\nBuild failed!"
 	
 	# build tags
 	if not os.path.isdir(build_dir + "minecraft"):
