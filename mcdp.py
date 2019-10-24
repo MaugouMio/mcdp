@@ -208,9 +208,15 @@ def find_lib(script_name, search_path):
 def parse_code(code):
 	old_stdout = sys.stdout
 	redirected_output = sys.stdout = StringIO()
-	exec(code)
+	warning_msg = str()
+	try:
+		exec(code)
+	except Warning as w:
+		warning_msg = w
 	sys.stdout = old_stdout
 	
+	if warning_msg:
+		print("Warning:", warning_msg)
 	return redirected_output.getvalue()
 
 def read_block(code, this, namespaces, argv = [], arg_name = []): # 'this' is a Folder() or Function() object
