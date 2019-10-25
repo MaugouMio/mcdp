@@ -456,7 +456,7 @@ def add_namespace(name, namespace, namespaces):
 	namespaces[name] = namespace
 	
 variable_types = ["namespace", "folder", "func"]
-def read_script(script, this_dir):
+def read_script(script, this_dir, read_as_virtual = False):
 	search_path = [this_dir] + module_path
 	
 	tags = {"tick": [], "load": []}
@@ -536,7 +536,7 @@ def read_script(script, this_dir):
 							break
 						
 						imported_script, imported_from = find_lib(splitted_line[i], search_path)
-						junk_description, imported, imported_tags = read_script(imported_script, imported_from)
+						junk_description, imported, imported_tags = read_script(imported_script, imported_from, virtual_namespace)
 						if virtual_namespace:
 							# set namespaces as virtual
 							for key in imported.keys():
@@ -580,7 +580,7 @@ def read_script(script, this_dir):
 					virtual_namespace = splitted_line[-2] == "as" and splitted_line[-1] == "virtual"
 					
 					imported_script, imported_from = find_lib(splitted_line[1], search_path)
-					junk_description, imported, imported_tags = read_script(imported_script, imported_from)
+					junk_description, imported, imported_tags = read_script(imported_script, imported_from, virtual_namespace)
 					
 					# delete unneeded namespaces
 					imported_namespaces = list(imported.keys())
@@ -627,6 +627,7 @@ def read_script(script, this_dir):
 				elif splitted_line[0] == "namespace":
 					declare_name, var, end_char = parse_definition(this_line, namespaces)
 					var.is_namespace = True
+					var.virtual = var.virtual or read_as_virtual
 					
 					if end_char == None:
 						this_block = var
