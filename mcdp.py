@@ -502,7 +502,7 @@ def read_script(script, this_dir):
 					
 					# copy this line to block_content (without the last '}')
 					if block_stack == 0:
-						if len(this_block.argv) == 0:
+						if not this_block.virtual:
 							namespaces[declare_name] = read_block(block_content, this_block, namespaces)
 						else:
 							this_block.unparsed = block_content
