@@ -1,6 +1,8 @@
 # -*- coding: UTF-8 -*-
-import sys, os, shutil, configparser
+import sys, os, shutil, configparser, colorama
 from io import StringIO
+from colorama import Fore, Style
+colorama.init()
 
 config_path = os.path.expandvars("%LOCALAPPDATA%\\mcdp")
 config = configparser.ConfigParser()
@@ -208,7 +210,7 @@ def find_lib(script_name, search_path):
 def parse_code(code):
 	old_stdout = sys.stdout
 	redirected_output = sys.stdout = StringIO()
-	warning_msg = str()
+	warning_msg = False
 	try:
 		exec(code)
 	except Warning as w:
@@ -216,7 +218,7 @@ def parse_code(code):
 	sys.stdout = old_stdout
 	
 	if warning_msg:
-		print("Warning:", warning_msg)
+		print(f"{Fore.YELLOW}Warning:", warning_msg, f"{Style.RESET_ALL}")
 	return redirected_output.getvalue()
 
 def read_block(code, this, namespaces, argv = [], arg_name = []): # 'this' is a Folder() or Function() object
