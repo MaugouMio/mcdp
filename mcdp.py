@@ -716,6 +716,9 @@ def build_datapack(proj_path):
 	if not os.path.isfile(proj_path + "\\__main__.dpl"):
 		return "No such file or directory:\n  '%s'" %proj_path + "\\__main__.dpl"
 	
+	global PROJ_DIR
+	PROJ_DIR = proj_path
+	
 	datapack_name = os.path.basename(proj_path)
 	with open(proj_path + "\\__main__.dpl", "r", encoding='UTF-8') as script:
 		description, namespaces, tags = read_script(script.read().splitlines(), proj_path)
