@@ -212,7 +212,7 @@ def parse_code(code):
 	redirected_output = sys.stdout = StringIO()
 	warning_msg = False
 	try:
-		exec(code)
+		exec(code, locals())
 	except Warning as w:
 		warning_msg = w
 	sys.stdout = old_stdout
