@@ -562,9 +562,9 @@ def read_script(script, this_dir, read_as_virtual = False):
 										tag_index += 1
 						
 						# check duplicated namespaces
-						for key in imported.keys():
-							if key in namespaces.keys() and namespaces[key].virtual == False:
-								raise NameError("namespace " + key + " already defined")
+						# for key in imported.keys():
+							# if key in namespaces.keys() and namespaces[key].virtual == False:
+								# raise NameError("namespace " + key + " already defined")
 						
 						namespaces = merge_two_dicts(namespaces, imported)
 						# append tags
