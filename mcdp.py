@@ -761,8 +761,14 @@ def build_datapack(proj_path):
 		os.mkdir(build_dir + "minecraft\\tags\\functions")
 	
 	for key in tags.keys():
+		exist_tags = set()
+		tag_order = []
+		for tag in tags[key]:
+			if tag not in exist_tags:
+				tag_order.append(tag)
+				exist_tags.add(tag)
 		with open(build_dir + "minecraft\\tags\\functions\\" + key + ".json", "w", encoding="utf-8") as f:
-			f.write('{\n\t"values":[\n\t\t%s\n\t]\n}' %",\n\t\t".join(tags[key]))
+			f.write('{\n\t"values":[\n\t\t%s\n\t]\n}' %",\n\t\t".join(tag_order))
 	
 	# copy side packages
 	folder_copy(proj_path + "\\data\\", build_dir)
